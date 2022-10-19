@@ -28,7 +28,8 @@ func main() {
 	var err error
 	var logSwitch string
 	var config sgs_conf.SgsConfig
-	// argvs init
+
+	// initialize args
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()
@@ -58,8 +59,7 @@ func main() {
 
 	log.Logger.Info("sgs[version:%s] start", version)
 
-	// config init
-	// load server config
+	// initialize config
 	confPath := path.Join(*confRoot, "sgs.conf")
 	config, err = sgs_conf.SgsConfigLoad(confPath, *confRoot)
 	if err != nil {

@@ -19,34 +19,38 @@ func NewSgsUdpServer(cfg sgs_conf.ConfigUdpServer) (s *SgsUdpServer) {
 	return s
 }
 
-func (this *SgsUdpServer) Start() (err error) {
-	address := fmt.Sprintf(":%d", this.Config.UdpPort)
+func (udpServer *SgsUdpServer) Start() {
+	address := fmt.Sprintf(":%d", udpServer.Config.UdpPort)
 	udpAddr, err := net.ResolveUDPAddr("udp", address)
-	conn, err := net.ListenUDP("udp", udpAddr)
-	defer conn.Close()
 	if err != nil {
-		fmt.Println("read from connect failed, err:" + err.Error())
 		util.AbnormalExit()
+		return
 	}
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		util.AbnormalExit()
+		return
+	}
+	defer conn.Close()
 
 	for {
 		data := make([]byte, 1500)
 		n, remoteAddr, err := conn.ReadFromUDP(data)
 		if err == nil {
 			go udpProcess(data, n, remoteAddr, conn)
-			// conn.WriteToUDP(data[:n], remoteAddr)
 		} else {
 			log.Logger.Error("failed to read from udp port,%s", err.Error())
-			break
+			util.AbnormalExit()
+			return
 		}
 	}
-
-	return err
 }
 
 // UDP goroutine 实现并发读取UDP数据
 func udpProcess(data []byte, len int, remoteAddr *net.UDPAddr, conn *net.UDPConn) {
-
-	fmt.Println(data)
+	str := string(data[:len])
+	fmt.Println(str)
 	conn.WriteToUDP(data[:len], remoteAddr)
+	fmt.Println("send back end...")
 }

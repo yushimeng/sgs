@@ -16,7 +16,7 @@ func SgsConfigLoad(confFile, confRoot string) (SgsConfig, error) {
 	var err error
 	var cfg SgsConfig
 
-	fmt.Printf("confFile:%s, confRoot:%s", confFile, confRoot)
+	fmt.Printf("confFile:%s, confRoot:%s\n", confFile, confRoot)
 
 	cfg.SetDefaultConf()
 
