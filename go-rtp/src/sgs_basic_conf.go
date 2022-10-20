@@ -1,4 +1,4 @@
-package sgs_conf
+package rtp
 
 type ConfigBasic struct {
 	MaxCpus int

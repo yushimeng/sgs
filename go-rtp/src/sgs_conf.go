@@ -1,4 +1,4 @@
-package sgs_conf
+package rtp
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 type SgsConfig struct {
 	Basic      ConfigBasic
 	HttpConfig ConfigHttpServer
-	UdpConfig  ConfigUdpServer
+	UdpConfig  ConfigRtpServer
 }
 
 func SgsConfigLoad(confFile, confRoot string) (SgsConfig, error) {

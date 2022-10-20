@@ -1,22 +1,21 @@
-package sgs_server
+package rtp
 
 import (
 	"fmt"
 	"net/http"
-	"sgs/sgs_conf"
 	"sgs/util"
 )
 
 type httpHandleMap map[string]func(w http.ResponseWriter, r *http.Request)
 
 type SgsHttpServer struct {
-	server    *SgsServer
-	Config    sgs_conf.ConfigHttpServer
+	server    *SgsServerManager
+	Config    ConfigHttpServer
 	Server    http.Server
 	HandleMgr httpHandleMap
 }
 
-func NewSgsHttpServer(svr *SgsServer, cfg sgs_conf.ConfigHttpServer) *SgsHttpServer {
+func NewSgsHttpServer(svr *SgsServerManager, cfg ConfigHttpServer) *SgsHttpServer {
 	httpServer := new(SgsHttpServer)
 	httpServer.server = svr
 	httpServer.Config = cfg

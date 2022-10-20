@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"path"
 	"runtime"
-	"sgs/sgs_conf"
-	"sgs/sgs_server"
+	rtp "sgs/go-rtp/src"
 	"time"
 
 	"github.com/baidu/go-lib/log"
@@ -27,7 +26,7 @@ var version string
 func main() {
 	var err error
 	var logSwitch string
-	var config sgs_conf.SgsConfig
+	var config rtp.SgsConfig
 
 	// initialize args
 	flag.Parse()
@@ -61,7 +60,7 @@ func main() {
 
 	// initialize config
 	confPath := path.Join(*confRoot, "sgs.conf")
-	config, err = sgs_conf.SgsConfigLoad(confPath, *confRoot)
+	config, err = rtp.SgsConfigLoad(confPath, *confRoot)
 	if err != nil {
 		fmt.Println("sgs conf load failed")
 		log.Logger.Error("main(): in BfeConfigLoad():%s", err.Error())

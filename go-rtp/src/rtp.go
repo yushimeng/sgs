@@ -3,6 +3,7 @@ package rtp
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 )
@@ -30,11 +31,17 @@ const (
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 // Marker returns the marker as bool in host order.
-func (pkt *RtpPacket) Parse(data []byte, n int, addr *net.UDPAddr) {
+func (pkt *RtpPacket) Parse(data []byte, n int, addr *net.UDPAddr) error {
+	var err error
+	if n < 13 {
+		return errors.New("Parse: rtp length less than 13")
+	}
 	copy(pkt.buf, data)
 	pkt.inUse = n
+	pkt.conn = addr
 	pkt.fromAddr.IPAddr = addr.IP
 	pkt.fromAddr.DataPort = addr.Port
+	return err
 }
 
 // Marker returns the marker as bool in host order.
@@ -187,6 +194,7 @@ type Address struct {
 type RawPacket struct {
 	inUse    int
 	padTo    int
+	conn     *net.UDPAddr
 	fromAddr Address
 	buf      []byte
 }
