@@ -9,7 +9,7 @@ Support:
 # usage:
 1. Output To console
     ```golang
-    import "github.com/sgs/log"
+    import "github.com/yushimeng/sgs/log"
     fun main() {
         defer log.Close()
         log.Debug("This is Debug msg")
@@ -22,7 +22,7 @@ Support:
     ```
 2. Output To file
     ```golang
-    import "github.com/sgs/log"
+    import "github.com/yushimeng/sgs/log"
     fun main() {
         defer log.Close()
         log.SetOutput("/tmp/xxx.log")

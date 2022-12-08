@@ -1,3 +1,3 @@
-module github.com/sgs
+module github.com/yushimeng/sgs
 
 go 1.19

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sgs/log"
+	"github.com/yushimeng/sgs/log"
 )
 
 func main() {
