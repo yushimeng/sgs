@@ -41,3 +41,10 @@ func (rec LogRecord) Format() string {
 		LogLevelStr[int(rec.Level)], rec.Source, rec.Message)
 	return msg
 }
+
+func (lvl LogLevel) FormatToString() (str string) {
+	if lvl < 0 || int(lvl) > len(LogLevelStr) {
+		return "UNKNOW"
+	}
+	return LogLevelStr[int(lvl)]
+}

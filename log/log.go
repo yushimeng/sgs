@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -13,48 +14,179 @@ var (
 )
 
 type Logger struct {
-	rec      LogRecordChan // 初始化时，设置大小
-	file     *os.File
-	filename string
+	lvl         LogLevel
+	rec         LogRecordChan // 初始化时，设置大小
+	file        *os.File
+	filename    string
+	out_chan    chan string
+	close_chan  chan int
+	rotate_chan chan bool
 }
+
+// func (logger *Logger) FormatToString() (str string) {
+// 	// buf := bytes.NewBuffer([]byte, 0, 64)
+// 	now := time.Now()
+// 	month, day, year := now.Month(), now.Day(), now.Year()
+// 	hour, minute, second := now.Hour(), now.Minute(), now.Second()
+// 	zone, _ := now.Zone()
+// 	out := bytes.NewBuffer(make([]byte, 0, 64))
+// 	out.WriteString("---------------------------\n")
+// 	out.WriteString("Logger Info report: \n")
+// 	fmt.Fprintf(out, "Time: %04d-%02d-%02d %02d:%02d:%02d %s\n", year, month, day, hour, minute, second, zone)
+// 	fmt.Fprintf(out, "Log level: %s\n", logger.lvl.FormatToString())
+// 	out.WriteString("---------------------------\n")
+
+// 	return out.String()
+// }
 
 func init() {
 	logger = &Logger{
-		rec: make(chan *LogRecord, 100),
+		lvl:         INFO,
+		rec:         make(chan *LogRecord, 100),
+		out_chan:    make(chan string),
+		close_chan:  make(chan int),
+		rotate_chan: make(chan bool),
 	}
-	go logger.output()
+	go logger.consumer()
 }
 
-func SetOutput(filename string) (err error) {
-	return logger.SetOutput(filename)
+func SetLogLevel(lvl LogLevel) {
+	logger.lvl = lvl
 }
 
-func (logger Logger) SetOutput(file_name string) (err error) {
-	if file_name == logger.filename {
-		return err
+func SetRotateDaily() {
+	go logger.writeRotate()
+}
+
+func SetOutput(filename string) error {
+	var err error
+
+	logger.out_chan <- filename
+
+	res, ok := <-logger.out_chan
+	if !ok {
+		return errors.New("recv set output result error")
+	}
+	if res != filename {
+		return errors.New("OpenFile error")
 	}
 
-	if logger.file != nil {
-		logger.file.Close()
-	}
-
-	logger.filename = file_name
-	if logger.filename != "" {
-		fd, err := os.OpenFile(file_name, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-		if err != nil {
-			return err
-		}
-		logger.file = fd
-		fmt.Printf("SetOutput-》设置日志成功 logger%p.file=%p\n", &logger, logger.file)
-		fmt.Fprintf(logger.file, "open file[%s]----------------\n", logger.filename)
-	}
 	return err
+}
+
+func Debug(arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = DEBUG
+	)
+	if lvl < logger.lvl {
+		return
+	}
+
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		logger.intLogf(lvl, first, args...)
+	case func() string:
+		// Log the closure (no other arguments used)
+		logger.intLogc(lvl, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		logger.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func Trace(arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = TRACE
+	)
+	if lvl < logger.lvl {
+		return
+	}
+
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		logger.intLogf(lvl, first, args...)
+	case func() string:
+		// Log the closure (no other arguments used)
+		logger.intLogc(lvl, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		logger.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
 }
 
 func Info(arg0 interface{}, args ...interface{}) {
 	const (
 		lvl = INFO
 	)
+	if lvl < logger.lvl {
+		return
+	}
+
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		logger.intLogf(lvl, first, args...)
+	case func() string:
+		// Log the closure (no other arguments used)
+		logger.intLogc(lvl, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		logger.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func Warn(arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = WARN
+	)
+	if lvl < logger.lvl {
+		return
+	}
+
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		logger.intLogf(lvl, first, args...)
+	case func() string:
+		// Log the closure (no other arguments used)
+		logger.intLogc(lvl, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		logger.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func Error(arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = ERROR
+	)
+	if lvl < logger.lvl {
+		return
+	}
+
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		logger.intLogf(lvl, first, args...)
+	case func() string:
+		// Log the closure (no other arguments used)
+		logger.intLogc(lvl, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		logger.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func Fatal(arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = FATAL
+	)
+	if lvl < logger.lvl {
+		return
+	}
+
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
@@ -125,37 +257,18 @@ func (logger *Logger) Write(record *LogRecord) {
 	logger.rec <- record
 }
 
-// Glog = Logger
-func (logger *Logger) output() {
-	defer func() {
-		if logger.file != nil {
-			logger.file.Close()
-		}
-		close(logger.rec)
-	}()
+func (logger *Logger) writeRotate() {
+	date := time.Now().Format("2006-01-02")
 	for {
-		select {
-		case rec, ok := <-logger.rec:
-			if !ok {
-				fmt.Println("read rec failed")
-				return
-			}
-			fmt.Printf("init->output:   logger:%p, file:%p\n", logger, logger.file)
-			// fmt.Fprint(logger.file, rec.Print())
-			if logger.file != nil {
-				// Perform the write
-				// _, err := fmt.Fprint(logger.file, rec.Format())
-				_, err := fmt.Fprintf(logger.file, "%s", rec.Format())
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", logger.filename, err)
-					return
-				}
-			} else {
-				fmt.Println(rec.Format())
-			}
+		time.Sleep(1 * time.Minute)
+		curDate := time.Now().Format("2006-01-02")
+		if curDate != date {
+			date = curDate
+			logger.rotate_chan <- true
 		}
 	}
 }
-func Close() {
 
+func Close() {
+	logger.close_chan <- 1
 }

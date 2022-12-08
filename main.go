@@ -1,23 +1,18 @@
 package main
 
 import (
-	"time"
-
 	"github.com/sgs/log"
 )
 
 func main() {
+	defer log.Close()
 
-	log.SetOutput("./sgs.log")
-	log.Info("info msgs")
-	ch := make(chan int)
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-			ch <- 1
-		}
-	}()
-	<-ch
-	log.Info("endmsg")
-	glog.Close()
+	for i := 0; i < 100; i++ {
+		log.Debug("This is Debug msg---%d", i)
+		log.Trace("This is Trace msg---%d", i)
+		log.Info("This is Info msg---%d", i)
+		log.Error("This is Error msg---%d", i)
+		log.Fatal("This is Fatal msg---%d", i)
+		log.Fatal("------------------------------%d", i)
+	}
 }
